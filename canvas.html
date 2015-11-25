@@ -13,31 +13,70 @@
         window.onload = function(){
             var canvas = document.getElementById('canvas');
              canvas.width = 1024;
-             canvas.height = 768;
+             canvas.height = 600;
 
-            var context = canvas.getContext("2d");
-            //使用context绘制
-            context.beginPath();
-            context.moveTo(100,100);
-            context.lineTo(500,500);
-            context.lineTo(100,500);
-            context.lineTo(100,100);
-            context.closePath();
-            context.lineWidth = 5;
+            var ctx = canvas.getContext("2d");
+            //使用ctx绘制
+            ctx.beginPath();
+            ctx.moveTo(100,100);
+            ctx.lineTo(500,500);
+            ctx.lineTo(100,500);
+            ctx.lineTo(100,100);
+            ctx.closePath();
+            ctx.lineWidth = 5;
             //设置颜色 stroke:笔画
-            context.strokeStyle = "green";
-            context.stroke();
+            ctx.strokeStyle = "green";
+            ctx.stroke();
 
-            context.fillStyle = "blue";
-            context.fill();
+            ctx.fillStyle = "blue";
+            ctx.fill();
 
-            context.beginPath();
-            context.moveTo(200,100);
-            context.lineTo(600,500);
-            context.closePath();
-            context.strokeStyle = "black";
-            context.stroke();
+            ctx.beginPath();
+            ctx.moveTo(200,100);
+            ctx.lineTo(600,500);
+            // ctx.closePath();
+            ctx.strokeStyle = "black";
+            ctx.stroke();
 
+            ctx.font="20px Georgia";
+            ctx.fillText("Hello World!",10,50);
+
+            ctx.beginPath();
+            ctx.font="30px Verdana";
+            // 创建渐变
+            var gradient=ctx.createLinearGradient(0,0,250,0);
+            gradient.addColorStop("0","magenta");
+            gradient.addColorStop("0.5","blue");
+            gradient.addColorStop("1.0","red");
+            // 用渐变填色
+            ctx.fillStyle=gradient;
+            ctx.fillText("w3school.com.cn",10,90);
+
+            ctx.beginPath();
+            ctx.lineWidth="6";
+            ctx.strokeStyle="red";
+            ctx.rect(300,5,290,140);
+            ctx.stroke();
+            ctx.fillStyle = 'red';
+            ctx.fill();
+
+            // 绿色矩形
+            ctx.beginPath();
+            ctx.lineWidth="4";
+            ctx.strokeStyle="green";
+            ctx.rect(470,30,50,50);
+            ctx.stroke();
+            ctx.fillStyle = 'green';
+            ctx.fill();
+
+            // 蓝色矩形
+            ctx.beginPath();
+            ctx.lineWidth="10";
+            ctx.strokeStyle="blue";
+            ctx.rect(500,50,150,80);
+            ctx.stroke();
+            ctx.fillStyle = 'blue';
+            ctx.fill();
         }
     </script>
 </body>
