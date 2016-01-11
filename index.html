@@ -5,36 +5,299 @@
     <title>图片上传本地预览</title>
     <meta name="keywords" content=""/>
     <meta name="description" content=""/>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 	<meta name="apple-mobile-web-app-capable" content="yes"/>
 	<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
 	<meta name="format-detection" content="telephone=no, email=no"/>
 
 </head>
 <body>
-	<canvas id="canvas" style="border: 2px solid #0BEFEC;"></canvas>
-	<p>请选择一张图片<input id="upload" type="file"></p>
+	<canvas id="canvas" style="width:100%; border: 2px solid #0BEFEC;"></canvas>
+	<p>请选择一张图片<input id="upload" type="file" accept="image/*"></p>
+	<span>滤镜：</span>
+	<button id="gray">灰度图</button>
+	<button id="black">黑白图</button>
+	<button id="invert">反色图</button>
+	<button id="relief">浮雕图</button>
+	<button id="filter">3*3滤波</button>
+	<button id="rotate">旋转</button>
+	<p><a href="https://github.com/Shafley/canvas">代码地址</a></p>
 	
+	<script src="exif.js"></script>
 	<script>
 		window.onload = function(){
 			var canvas = document.getElementById('canvas');
 			var upload = document.getElementById('upload');
-			canvas.width = 500;
+			var gray = document.getElementById('gray');
+			var black = document.getElementById('black');
+			var invert = document.getElementById('invert');
+			var relief = document.getElementById('relief');
+			var filter = document.getElementById('filter');
+			var rotate = document.getElementById('rotate');
+
+			canvas.width = 400;
 			canvas.height = 400;
+
 			var ctx = canvas.getContext('2d');
 			var fileReader = new FileReader();
 
-			upload.addEventListener('change', function(){
+			//touchmove 初始参考坐标sx,sy, 偏移量dx,dy
+			var sx, sy, dx, dy;
+
+			// 上传的图片, 图片位置尺寸, 设备拍摄角度
+			var img, imgInfo, orientation;
+
+			//旋转角度
+			var angle = 0;
+
+			upload.addEventListener('change', function (e){
 				if(this.files.length === 0) return;
 				fileReader.readAsDataURL(this.files[0]);
+				sx = 0, sy = 0, dx = 0, dy = 0, angle = 0;
+			}); 
+
+			canvas.addEventListener("dragover", function(e){  
+			    e.stopPropagation();  
+			    e.preventDefault();
+			}); 
+
+			canvas.addEventListener('drop', function (e){
+				e.stopPropagation();  
+    			e.preventDefault(); 
+				fileReader.readAsDataURL(e.dataTransfer.files[0]);
+				sx = 0, sy = 0, dx = 0, dy = 0, angle = 0;
+			});
+
+			rotate.addEventListener('click', function(){
+				angle += 90; 
+				angle = angle==360 ? 0 : angle;
+
+				var temp;
+				if(angle==90 || angle==270){
+					temp = dx;
+					dx = dy;
+					dy = temp;
+				}
+				if(angle==0 || angle==180){
+					temp = dx;
+					dx = -dy;
+					dy = temp;
+				}
+
+				draw();				
 			});
 
 			fileReader.onload = function(e){
-				var img = new Image();
+				img = new Image();
 				img.src = e.target.result;
 				img.onload = function(){
-					ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+					imgInfo = imagePosition();
+					EXIF.getData(img, function() {
+			            orientation = EXIF.getTag(this, "Orientation") || 1;
+			        });
+					draw();
 				}
+			}
+
+			function imagePosition(){
+				var x, y, width, height;
+				var scaleCas = canvas.width / canvas.height;
+				var scaleImg = img.width / img.height;
+
+				//scaleImg > scaleCas: 居中完全显示
+				//scaleImg < scaleCas: 居中裁剪显示
+				if(scaleImg < scaleCas){
+					width = canvas.width;
+					height = canvas.width / scaleImg;
+					x = 0;
+					y = (canvas.height - height) / 2;
+				}else{
+					width = canvas.height * scaleImg;
+					height = canvas.height;
+					x = (canvas.width - width) / 2;
+					y = 0;
+				}	
+
+				return {x: x, y: y, w: width, h: height};	
+			}
+
+			
+			canvas.addEventListener('touchstart',function (e){
+				sx = e.touches[0].pageX;
+				sy = e.touches[0].pageY;
+			});
+			canvas.addEventListener('touchmove',function (e){
+
+				dx += e.touches[0].pageX - sx;
+				dy += e.touches[0].pageY - sy;
+
+				if(orientation==8 || orientation==6 || angle==90 || angle==270){
+					var temp;
+					temp = imgInfo.x;
+					imgInfo.x = imgInfo.y;
+					imgInfo.y = temp;
+				}
+				//左右边界判断
+				if(Math.abs(dx) > Math.abs(imgInfo.x)){
+					if(dx > 0){
+						dx = Math.abs(imgInfo.x);
+					}else{
+						dx = -Math.abs(imgInfo.x);
+					}
+				}
+				//上下边界判断
+				if(Math.abs(dy) > Math.abs(imgInfo.y)){
+					if(dy > 0){
+						dy = Math.abs(imgInfo.y);
+					}else{
+						dy = -Math.abs(imgInfo.y);
+					}
+				}
+				//还原imgInfo的值
+				imgInfo = imagePosition();
+
+				sx = e.touches[0].pageX;
+				sy = e.touches[0].pageY;
+				
+				draw();
+			})
+
+			function draw(){
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				ctx.save();
+
+				//orientation 顺时针: 1 8 3 6  0° 90° 180° 270°
+				var deg = 0;
+				// orientation = 8;
+				switch(orientation){
+					case 1: break;
+					case 8: deg = 90; break;
+					case 3: deg = 180; break;
+					case 6: deg = 270; break;
+					default: return;
+				}
+
+				//以图片中心旋转
+				var centerX = imgInfo.x + dx + imgInfo.w / 2;
+				var centerY = imgInfo.y + dy + imgInfo.h / 2;
+				ctx.translate(centerX, centerY);
+				ctx.rotate( (-deg + angle)*Math.PI/180 );
+				ctx.drawImage(img, -imgInfo.w/2, -imgInfo.h/2, imgInfo.w, imgInfo.h);
+				ctx.restore();
+			}
+
+			gray.addEventListener('click', function(){
+				rgb2gray();
+			});
+			// 灰度图
+			function rgb2gray(){
+				var image = ctx.getImageData(imgInfo.x, imgInfo.y, imgInfo.w, imgInfo.h);
+				var imageData = image.data;
+				var len = imageData.length;
+				for(var i=0; i<len; i+=4){
+					var avarage = (imageData[i] + imageData[i+1] + imageData[i+2]) / 3;
+					for(var j=0; j<3; j++){
+						imageData[i+j] = avarage;
+					}
+				}
+				ctx.putImageData(image, imgInfo.x, imgInfo.y);				
+			}
+
+			black.addEventListener('click', function(){
+				rgb2black();
+			});
+			// 黑白图
+			function rgb2black(){
+				var image = ctx.getImageData(imgInfo.x, imgInfo.y, imgInfo.w, imgInfo.h);
+				var imageData = image.data;
+				var len = imageData.length;
+				for(var i=0; i<len; i+=4){
+					var avarage = (imageData[i] + imageData[i+1] + imageData[i+2]) / 3;
+					avarage = avarage > 128 ? 255 : 0;
+					for(var j=0; j<3; j++){
+						imageData[i+j] = avarage;
+					}
+				}
+				ctx.putImageData(image, imgInfo.x, imgInfo.y);				
+			}
+
+			invert.addEventListener('click', function(){
+				invertColor();
+			});	
+			// 反色
+			function invertColor(){
+				var image = ctx.getImageData(imgInfo.x, imgInfo.y, imgInfo.w, imgInfo.h);
+				var imageData = image.data;
+				var len = imageData.length;
+				for(var i=0; i<len; i+=4){
+					imageData[i] = 255 - imageData[i];
+					imageData[i+1] = 255 - imageData[i+1];
+					imageData[i+2] = 255 - imageData[i+2];
+				}
+				ctx.putImageData(image, imgInfo.x, imgInfo.y);
+			}
+
+			relief.addEventListener('click', function(){
+				reliefColor();
+			});
+			//浮雕：当前像素值等于后一个像素值减去前一个像素值
+			function reliefColor(){
+				var image = ctx.getImageData(imgInfo.x, imgInfo.y, imgInfo.w, imgInfo.h);
+				var imageData = image.data;
+				//复制数组：解除 data 和 imageData 的引用关系
+				var data = ctx.getImageData(imgInfo.x, imgInfo.y, imgInfo.w, imgInfo.h).data;
+				var len = data.length;
+				for(var i=4; i<len; i+=4){
+
+					var r = data[i+4] - data[i-4] + 128;
+					var g = data[i+1+4] - data[i+1-4] + 128;
+					var b = data[i+2+4] - data[i+2-4] + 128;
+
+					r = (r < 0) ? 0 : ( (r > 255) ? 255 : r );
+					g = (g < 0) ? 0 : ( (g > 255) ? 255 : g );
+					b = (b < 0) ? 0 : ( (b > 255) ? 255 : b );
+
+					var avarage = (r + g + b) / 3;
+					for(var j=0; j<3; j++){
+						imageData[i+j] = avarage;
+					}
+				}
+				ctx.putImageData(image, imgInfo.x, imgInfo.y);
+			}
+
+			filter.addEventListener('click', function(){
+				filterColor();
+			});
+
+			function filterColor(){
+				var image = ctx.getImageData(imgInfo.x, imgInfo.y, imgInfo.w, imgInfo.h);
+				var imageData = image.data;
+				//复制数组：解除 data 和 imageData 的引用关系
+				var data = ctx.getImageData(imgInfo.x, imgInfo.y, imgInfo.w, imgInfo.h).data; 
+				var blur = 2;
+				for(var i=blur; i<image.width; i++){
+					for(var j=blur; j<image.height; j++){
+						var sumR = 0; sumG = 0; sumB = 0;
+						for(var dx=-blur; dx<=blur; dx++){
+							for(var dy=-blur; dy<=blur; dy++){
+								var x = i + dx;
+								var y = j + dy;
+								var p = x + y*image.width;
+
+								sumR += data[4*p];
+								sumG += data[4*p+1];
+								sumB += data[4*p+2];
+							}
+						}
+						var p = i + j*image.width;
+						var blurNum = (blur*2 +1)*(blur*2 +1);
+						imageData[4*p] = sumR / blurNum;
+						imageData[4*p+1] = sumG / blurNum;
+						imageData[4*p+2] = sumB / blurNum;
+
+					}
+				}
+				ctx.putImageData(image, imgInfo.x, imgInfo.y);
 			}
 		}
 
