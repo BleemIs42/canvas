@@ -70,7 +70,7 @@
 			var filter = document.getElementById('filter');
 			var rotate = document.getElementById('rotate');
 			var reset = document.getElementById('reset');
-			var console = document.getElementById('console');
+			var text = document.getElementById('console');
 
 			canvas.width = 800;
 			canvas.height = 800;
@@ -88,7 +88,7 @@
 			var angle = 0, scale = 1;
 
 			//双指触摸缩放起始间距, 触摸结束缩放比例, 最小缩放比例, 缩放模式
-			var dis, endScale = 1, minScale, scaleMode = false;
+			var dis, minScale, scaleMode = false;
 
 			reset.addEventListener('click', function(){
 				info.style.display = 'block';
@@ -207,8 +207,10 @@
 					ot = distance(e.touches[0].pageX, e.touches[0].pageY, e.touches[1].pageX, e.touches[1].pageY);
 					
 					//缩放限制
-					scale = endScale + ot / dis -1;
-					console.innerText = 'dis：'+ dis + '\not：' + ot + '\nscale:' + scale;
+					scale += Math.ceil(ot - dis)*0.005;
+					//相对于上一帧的变化
+					dis = ot;
+					text.innerText = 'dis：'+ dis + '\not：' + ot + '\nscale:' + scale;
 				}
 				
 				draw();
@@ -220,7 +222,6 @@
 
 			canvas.addEventListener('touchend', function (e){
 				scale = scale > minScale ? scale : minScale;
-				endScale = scale;
 
 				if(orientation==8 || orientation==6 || angle==90 || angle==270){
 					var temp;
