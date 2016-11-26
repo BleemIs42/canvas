@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zn">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <meta name="keywords" content=""/>
+    <meta name="description" content=""/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+	<meta name="format-detection" content="telephone=no, email=no"/>
+	<style>
+		*{
+			margin:0;
+			padding:0;
+		}
+	</style>
+</head>
+<body>
+	<canvas id="canvas" style="border:2px blue solid"></canvas>
+  <h1>你好你好</h1>
+
+	<script src="utils/utils.js"></script>
+	<script>
+	window.onload = function(){
+		var canvas = document.getElementById('canvas');
+		canvas.width = 400;
+		canvas.height = 400;
+
+		var ctx = canvas.getContext('2d');
+
+		function Arrow(){
+			this.x = 0;
+			this.y = 0;
+			this.color = "#ffff00";
+			this.rotation = 0;
+		}
+		Arrow.prototype.draw = function(ctx){
+			ctx.save();
+			ctx.translate(this.x, this.y);
+			ctx.rotate(this.rotation);
+			ctx.lineWidth = 2;
+			ctx.fillStyle = this.color;
+			ctx.beginPath();
+			ctx.moveTo(-50, -25);
+			ctx.lineTo(0, -25);
+			ctx.lineTo(0, -50);
+			ctx.lineTo(50, 0);
+			ctx.lineTo(0, 50);
+			ctx.lineTo(0, 25);
+			ctx.lineTo(-50, 25);
+			ctx.lineTo(-50, -25);
+			ctx.closePath();
+			ctx.fill();
+			ctx.stroke();
+			ctx.restore();
+		}
+		var mouse = utils.getPoints(canvas);
+		var arrow = new Arrow();
+		arrow.x = canvas.width / 2;
+		arrow.y = canvas.height / 2;
+
+		(function drawFrame () {
+	        window.requestAnimationFrame(drawFrame, canvas);
+	        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+	        var dx = mouse.x - arrow.x,
+	            dy = mouse.y - arrow.y;
+
+	        arrow.rotation = Math.atan2(dy, dx); //radians
+	        arrow.draw(ctx);
+	    }());
+	}
+	</script>
+</body>
+</html>

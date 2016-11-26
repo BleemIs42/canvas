@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zn">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <meta name="keywords" content=""/>
+    <meta name="description" content=""/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+	<meta name="format-detection" content="telephone=no, email=no"/>
+</head>
+<body>
+	<canvas id="canvas" width='400' height="300"></canvas>
+
+	<script src="lib/create.js"></script>
+	<script>
+		var canvas = document.getElementById("canvas");
+
+        stage = new createjs.Stage(canvas);
+        stage.autoClear = true;
+
+        circle = new createjs.Shape();
+	    circle.graphics.beginFill("red").drawCircle(0, 0, 40);
+	    circle.x = circle.y = 50;
+
+	    stage.addChild(circle);
+
+	    circle.addEventListener('click', function(){
+	    	console.log('clicked!')
+	    });
+
+
+	    var box = new createjs.Shape();
+		box.graphics.beginLinearGradientFill(["#ff0000", "#0000ff"], [0, 1], 0, 0, 0, 100)
+		box.graphics.drawRect(0, 50, 100, 100);
+		box.cache(0, 0, 100, 100);
+
+		var bmp = new createjs.Bitmap("images/picture.jpg");
+		// bmp.filters = [
+		//     new createjs.AlphaMapFilter(box.cacheCanvas)
+		//   ];
+		// bmp.cache(0, 0, 100, 100);
+		bmp.scaleX = bmp.scaleY = 0.1;
+		stage.addChild(bmp);
+
+		var text = new createjs.BitmapText('Create.js');
+		text.x = 0;
+		text.y = 100;
+		text.lineHeight = 20;
+		text.text = 'Create.js';
+		text.scaleX = text.scaleY = 2;
+		stage.addChild(text);
+
+		var blur = new createjs.Shape().set({x:100,y:100});
+		blur.graphics.beginFill("#ff0000").drawCircle(0,0,50);
+
+		var blurFilter = new createjs.BlurFilter(20, 20, 1);
+		blur.filters = [blurFilter];
+		var bounds = blurFilter.getBounds();
+
+		blur.cache(-50+bounds.x, -50+bounds.y, 100+bounds.width, 100+bounds.height);
+		stage.addChild(blur);
+
+
+
+
+        createjs.Ticker.framerate = 60;
+        createjs.Ticker.addEventListener("tick", function (){
+        	circle.x += 10;
+        	if (circle.x - 40 > stage.canvas.width) { circle.x = -40; }
+        	stage.update();
+        });
+
+	</script>
+</body>
+</html>
+		

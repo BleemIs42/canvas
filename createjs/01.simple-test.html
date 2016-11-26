@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zn">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <meta name="keywords" content=""/>
+    <meta name="description" content=""/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+	<meta name="format-detection" content="telephone=no, email=no"/>
+</head>
+<body>
+	<canvas id="canvas" width='800' height="600"></canvas>
+
+	<script src="lib/create.js"></script>
+	<script>
+
+
+        var stage;
+
+        init();
+
+        function init() {
+
+            var canvas = document.getElementById("canvas");
+
+            stage = new createjs.Stage(canvas);
+
+            stage.autoClear = true;
+
+			//添加背景图
+
+            var bg  = new createjs.Bitmap("../preview-picture/images/blue.jpg");
+
+            stage.addChild(bg);
+
+			//增加5个小人，不断做旋转和放缩
+
+            for (var i = 0; i < 5; i++) {
+
+                var man = new createjs.Bitmap("../rain/images/picture.jpg");
+
+                man.regX = 0;
+
+                man.regY = 0;
+
+                man.x = canvas.width/6*(i+1);
+
+                man.y = canvas.height/5*4;
+
+                man.scaleX = man.scaleY = 0.1;
+
+                stage.addChild(man);
+
+                createjs.Tween.get(man, {loop: true}, true)
+
+                        .to({rotation: 360, scaleX:0.2, scaleY:0.2}, 1000).to({rotation: 360, scaleX:0.1, scaleY:0.1}, 1000);
+
+                man.addEventListener("click", function(event) {
+
+                    console.log("click", event.currentTarget);
+
+                }); //监听点击非常方便，位图的透明区域忽略鼠标事件
+
+            }
+
+            var images = [];
+
+            for (var i = 1; i <= 14; i++) {
+
+                images.push("../rain/images/picture.jpg");
+
+            }
+
+			//增加5个帧动画小人，不断播放14帧画面
+
+            for (var j = 0; j < 5; j++) {
+
+                var sheet = new createjs.SpriteSheet({
+
+                    images: images,
+
+                    frames: {width: 80, height: 80, regX: 0, regY: 0}
+
+                }); //需要设置每帧的宽高，注册点信息
+
+                var man = new createjs.Sprite(sheet);
+
+                man.framerate = 60/7;
+
+                man.x = canvas.width/6*(j+1);
+
+                man.y = canvas.height / 3;
+
+                man.play();
+
+                stage.addChild(man);
+
+            }
+
+            stage.update();
+
+            createjs.Ticker.setFPS(60);
+
+            createjs.Ticker.addEventListener("tick", tick);
+
+        }
+
+		//控制舞台不断update更新
+
+        function tick(event) {
+
+            stage.update(event);
+
+        }
+
+	</script>
+</body>
+</html>
+		
